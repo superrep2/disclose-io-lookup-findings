@@ -1,5 +1,9 @@
 # Disclose.io Lookup Findings — 2026-10-10
 
+> **Disclaimer: This is not a security report.**
+>
+> This repository contains automated lookup results and a conversation log only. It does not identify, describe, or demonstrate any vulnerability. It does not constitute a vulnerability disclosure, bug report, proof of concept, or security advisory. All content is informational lead data about publicly published disclosure channels. Verify any policy and scope independently before any action.
+
 Technical record of security contact resolution via the official Disclose.io Lookup MCP server (`https://lookup.disclose.io/mcp`).
 
 ## Assets examined
