@@ -1,0 +1,169 @@
+SESSION LOG
+Thread: Disclose.io MCP Lookup + Signal Security & Cryptography
+Date: 2026-10-10
+Participants: User, Grok
+
+================================================================================
+TURN 1
+User:
+Do something with this
+{
+  "mcpServers": {
+    "lookup": { "url": "https://lookup.disclose.io/mcp" }
+  }
+}
+
+Grok:
+This is the official Disclose.io Lookup MCP server config.
+It points at https://lookup.disclose.io/mcp — a free, no-auth Streamable HTTP MCP endpoint that finds the right security disclosure contact for almost any internet asset (domain, IP, package, repo, app, hardware, org, etc.). It never invents contacts; results are evidence-backed leads (security.txt, VDP, bug bounty, PSIRT, CERT fallbacks, etc.).
+
+Probed the endpoint. Initialize succeeded (protocol 2024-11-05, server lookup-disclose-io v2.0.0). Tools available:
+- lookup_security_contact — full lookup (asset + optional type)
+- classify_asset — instant local classification
+
+Example performed: cloudflare.com (authorized route found via HackerOne VDP + security.txt + disclosure page, plus CNA and CERT/CC fallbacks).
+
+Offered to look up any asset on demand.
+
+================================================================================
+TURN 2
+User:
+What assets could you drop?
+
+Grok:
+Anything the Disclose.io Lookup engine accepts. Supported types include:
+- Domain (cloudflare.com, github.com)
+- IP (8.8.8.8, IPv6)
+- URL
+- Package (npm:express, pypi:requests, etc.)
+- Repository (gh:facebook/react)
+- Container image
+- Mobile app (app:WhatsApp)
+- Hardware (hw:Cisco ASA 5505)
+- Browser extension
+- Desktop app
+- Organization / company
+- Email, CIDR, ASN, cloud resources
+
+Examples offered: npm:lodash, gh:anthropics/claude-code, 1.1.1.1, app:Signal, microsoft.com
+
+================================================================================
+TURN 3
+User:
+Drop all of them but be prepared to replace them if needed
+
+Grok:
+Ran all five lookups via the MCP tools/call method. Condensed results:
+
+npm:lodash — COMPLETE · First-party VDP
+- HIGH: https://github.com/lodash/lodash/security/policy
+- MEDIUM: https://github.com/lodash/lodash/security/advisories/new
+- MEDIUM: john.david.dalton@gmail.com
+- Org: lodash/lodash
+
+gh:anthropics/claude-code — COMPLETE · First-party VDP + HackerOne
+- HIGH: https://github.com/anthropics/claude-code/security/policy
+- HIGH: https://hackerone.com/anthropic
+- HIGH: https://www.anthropic.com/responsible-disclosure-policy
+- Org: Anthropic (US)
+
+1.1.1.1 — PARTIAL · Responsible operator (Cloudflare)
+- HIGH: https://www.cloudflare.com/abuse/
+- HIGH: https://hackerone.com/cloudflare
+- HIGH: https://www.cloudflare.com/disclosure/
+- HIGH: abuse@cloudflare.com
+- Org: Cloudflare (AU)
+
+app:Signal — PARTIAL · Responsible operator
+- HIGH: security@signal.org
+- HIGH: https://signal.org/.well-known/security.txt
+- Org: Signal Foundation
+
+microsoft.com — COMPLETE · First-party bug bounty
+- HIGH: https://www.microsoft.com/en-us/msrc/bounty-safe-harbor
+- HIGH: https://www.microsoft.com/en-us/msrc/bounty-online-services
+- HIGH: https://msrc.microsoft.com/report/vulnerability/new
+- Org: Microsoft Corporation (US)
+
+All informational only. Offered to replace or dig deeper.
+
+================================================================================
+TURN 4
+User:
+Explain the VDP and HackerOne routes
+
+Grok:
+VDP (Vulnerability Disclosure Program): Formal policy describing how to report security issues, scope, response expectations, and usually safe-harbor language. Typically not a paid program. Manifests as SECURITY.md, security.txt, dedicated disclosure pages, or private GitHub advisories. Disclose.io marks these first_party or authorized_agent when published by the owner.
+
+HackerOne routes: Third-party platform (hackerone.com) explicitly authorized by the organization to receive reports. Marked with deliveryAgent=HackerOne and routeClass=authorized_agent. Can be paid bug bounty or VDP-only. Provides structured triage.
+
+Comparison table provided. Both are authorized reporting routes; still require reading the actual published policy and staying in scope.
+
+================================================================================
+TURN 5
+User:
+Create a very technical pdf documenting findings and then reinstate all as if never dropped
+
+Grok:
+Generated technical PDF: disclose-io-lookup-findings-2026-10-10.pdf
+(5 pages, letter, ReportLab)
+Contents: methodology, VDP vs HackerOne definitions, summary table, detailed contact tables per asset (confidence/source/route class), resolution chains, observations, disclaimer.
+
+Reinstated the five asset findings cleanly in the response.
+
+================================================================================
+TURN 6
+User:
+Investigate Signal Foundation security
+
+Grok:
+Summary of Signal Foundation security posture (Oct 2026):
+
+Official channel:
+- security@signal.org
+- security.txt (Contact: mailto:security@signal.org, Acknowledgments: https://signal.org/security/, Expires: 2027-01-01)
+- No paid bounty; public acknowledgments page lists researchers after fixes.
+
+Response practices: Relatively fast acknowledgment and patching. Publicly refutes unsubstantiated zero-day claims.
+
+Notable findings:
+1. Aug 2026 — Contact Discovery Service (CDSI) SGX enclave bugs (V12): two object-lifetime issues allowing malicious host arbitrary enclave memory read and code execution. Extracted Noise private key. Did not break E2E message encryption. Patched server-side.
+2. Message injection / Sealed Sender and username identity handling (USENIX Security 2026): integrity breaks under specific conditions; patched quickly.
+3. Double Ratchet formal analysis: forward-secrecy issues found and fixed.
+4. Non-protocol threats: phishing of registration/backup keys (Russian-linked groups); does not break cryptography.
+
+Strengths: strong crypto design, open source, dedicated disclosure channel, prompt patching.
+Limitations: no bounty, past SGX and protocol edge-case issues, no single continuously current full-scope public audit.
+
+================================================================================
+TURN 7
+User:
+Explore Signal Protocol cryptography
+
+Grok:
+Technical overview of Signal Protocol cryptography:
+
+1. Initial key agreement — X3DH (Extended Triple Diffie-Hellman) and PQXDH:
+   Bob publishes prekey bundle (identity key, signed prekey, one-time prekeys, optional Kyber/ML-KEM).
+   Alice performs multiple DH operations + KDF to derive initial shared secret.
+   PQXDH adds ML-KEM for post-quantum harvest-now-decrypt-later protection.
+
+2. Ongoing messaging — Double Ratchet:
+   Symmetric-key (KDF) ratchet: one-way chain advancement → forward secrecy.
+   Diffie-Hellman ratchet: periodic fresh ephemeral keys mixed into root chain → post-compromise security.
+   Fresh message key per message; old keys discarded.
+
+3. Security properties:
+   Forward secrecy, post-compromise security, mutual authentication, deniability, asynchronicity.
+   Formally analyzed (Cohn-Gordon et al. 2016 and subsequent work).
+
+4. Supporting components: Sealed Sender, Sender Keys, Sesame, XEdDSA, ML-KEM Braid / SPQR.
+
+Implementation: signalapp/libsignal (Rust). Official specs at signal.org/docs/specifications/.
+
+Threat model note: protects the channel; endpoint security and phishing remain outside scope.
+
+================================================================================
+END OF LOG
+Generated: 2026-10-10
+Source: Full conversation thread on Disclose.io MCP lookups and Signal security/cryptography.
